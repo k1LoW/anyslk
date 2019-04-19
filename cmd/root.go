@@ -36,6 +36,7 @@ import (
 
 var (
 	smtpPort int
+	logDir   string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -46,7 +47,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		l := logger.NewLogger(".")
+		l := logger.NewLogger(logDir)
 
 		_, err := util.GetEnvSlackIncommingWebhook()
 		if err != nil {
@@ -84,4 +85,5 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().IntVarP(&smtpPort, "smtp-port", "", 0, "SMTP server port")
+	rootCmd.Flags().StringVarP(&logDir, "log-dir", "", ".", "Log directory")
 }
