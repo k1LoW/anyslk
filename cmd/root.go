@@ -30,13 +30,15 @@ import (
 	"github.com/k1LoW/anyslk/logger"
 	"github.com/k1LoW/anyslk/smtp_server"
 	"github.com/k1LoW/anyslk/util"
+	"github.com/k1LoW/anyslk/version"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
 var (
-	smtpPort int
-	logDir   string
+	smtpPort    int
+	logDir      string
+	showVersion bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -48,6 +50,11 @@ var rootCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		l := logger.NewLogger(logDir)
+
+		if showVersion {
+			fmt.Printf("%s\n", version.Version)
+			os.Exit(1)
+		}
 
 		_, err := util.GetEnvSlackIncommingWebhook()
 		if err != nil {
@@ -86,4 +93,5 @@ func Execute() {
 func init() {
 	rootCmd.Flags().IntVarP(&smtpPort, "smtp-port", "", 0, "SMTP server port")
 	rootCmd.Flags().StringVarP(&logDir, "log-dir", "", ".", "Log directory")
+	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show version")
 }
