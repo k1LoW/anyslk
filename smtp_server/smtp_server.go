@@ -61,15 +61,16 @@ func (s *Session) Data(r io.Reader) error {
 	if b, err := ioutil.ReadAll(r); err != nil {
 		return err
 	} else {
+		data := string(b)
 		slackChannel := makeSlackChannel(s.to)
 		payload := slack.Payload{
 			Channel:   slackChannel,
-			IconEmoji: ":email:",
+			IconEmoji: ":slack:",
 			Username:  s.username,
 		}
 		attachment := slack.Attachment{
-			Title:     fmt.Sprintf("Mail from %s", s.from),
-			Text:      string(b),
+			Title:     fmt.Sprintf(":email: Mail from %s", s.from),
+			Text:      data,
 			Fallback:  fmt.Sprintf("Mail from %s", s.from),
 			Timestamp: time.Now().Unix(),
 			Footer:    "anyslk",
@@ -78,6 +79,7 @@ func (s *Session) Data(r io.Reader) error {
 		slack.Client{
 			WebhookURL: s.webhookURL,
 		}.Post(&payload)
+		s.logger.Info("Mail -> slack message", zap.String("from", s.from), zap.String("to", s.to), zap.String("data", data))
 	}
 	return nil
 }
@@ -108,8 +110,8 @@ func RunServer(ctx context.Context, logger *zap.Logger, port int) error {
 	defer s.Close()
 	s.Addr = fmt.Sprintf("localhost:%d", port)
 	s.Domain = "anyslk.local"
-	s.ReadTimeout = 10 * time.Second
-	s.WriteTimeout = 10 * time.Second
+	s.ReadTimeout = 1000 * time.Second
+	s.WriteTimeout = 1000 * time.Second
 	s.MaxMessageBytes = 1024 * 1024
 	s.MaxRecipients = 50
 	s.AllowInsecureAuth = true

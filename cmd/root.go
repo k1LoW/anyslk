@@ -42,8 +42,8 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "anyslk",
-	Short: "Mail -> Slack message",
-	Long:  `Mail -> Slack message`,
+	Short: "* -> slack message",
+	Long:  `* -> slack message`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
