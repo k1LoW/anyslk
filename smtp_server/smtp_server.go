@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"strings"
 	"time"
 
@@ -96,8 +97,8 @@ func makeSlackChannel(to string) string {
 	return fmt.Sprintf("#%s", splitted[0])
 }
 
-// RunServer ...
-func RunServer(ctx context.Context, logger *zap.Logger, port int) error {
+// Run ...
+func Run(ctx context.Context, logger *zap.Logger, port int) error {
 	webhookURL, err := util.GetEnvSlackIncommingWebhook()
 	if err != nil {
 		return err
@@ -120,6 +121,41 @@ func RunServer(ctx context.Context, logger *zap.Logger, port int) error {
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
+			logger.Fatal("error", zap.Error(err))
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		break
+	}
+	return nil
+}
+
+// RunWithServerStarter ...
+func RunWithServerStarter(ctx context.Context, logger *zap.Logger, l net.Listener) error {
+	webhookURL, err := util.GetEnvSlackIncommingWebhook()
+	if err != nil {
+		return err
+	}
+	be := &Backend{
+		webhookURL: webhookURL,
+		logger:     logger,
+	}
+	s := smtp.NewServer(be)
+	defer s.Close()
+	s.Addr = l.Addr().String()
+	s.Domain = "anyslk.local"
+	s.ReadTimeout = 1000 * time.Second
+	s.WriteTimeout = 1000 * time.Second
+	s.MaxMessageBytes = 1024 * 1024
+	s.MaxRecipients = 50
+	s.AllowInsecureAuth = true
+
+	logger.Info(fmt.Sprintf("Start listening %s", s.Addr))
+
+	go func() {
+		if err := s.Serve(l); err != nil {
 			logger.Fatal("error", zap.Error(err))
 		}
 	}()

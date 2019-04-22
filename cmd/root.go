@@ -22,7 +22,9 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,14 +33,17 @@ import (
 	"github.com/k1LoW/anyslk/smtp_server"
 	"github.com/k1LoW/anyslk/util"
 	"github.com/k1LoW/anyslk/version"
+	"github.com/lestrrat-go/server-starter/listener"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
 var (
-	smtpPort    int
-	logDir      string
-	showVersion bool
+	listenSmtp       bool
+	smtpPort         int
+	logDir           string
+	useServerStarter bool
+	showVersion      bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -62,9 +67,31 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if smtpPort != 0 {
+		var listeners []net.Listener
+		if useServerStarter {
+			listeners, err = listener.ListenAll()
+			if err != nil {
+				l.Fatal("error", zap.Error(err))
+				os.Exit(1)
+			}
+		}
+
+		// 1. SMTP
+		if listenSmtp {
 			l.Info("Starting SMTP server.")
-			go smtp_server.RunServer(ctx, l, smtpPort)
+			if useServerStarter {
+				go smtp_server.RunWithServerStarter(ctx, l, listeners[0])
+			} else {
+				go smtp_server.Run(ctx, l, smtpPort)
+			}
+		}
+
+		// 2. HTTP
+		// TODO
+
+		if !listenSmtp {
+			l.Fatal("error", zap.Error(errors.New("No server running.")))
+			os.Exit(1)
 		}
 
 		signalChan := make(chan os.Signal, 1)
@@ -91,7 +118,9 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().IntVarP(&smtpPort, "smtp-port", "", 0, "SMTP server port")
+	rootCmd.Flags().BoolVarP(&listenSmtp, "listen-smtp", "", false, "Start and listen SMTP server")
+	rootCmd.Flags().IntVarP(&smtpPort, "smtp-port", "", 1025, "SMTP server port")
 	rootCmd.Flags().StringVarP(&logDir, "log-dir", "", ".", "Log directory")
+	rootCmd.Flags().BoolVarP(&useServerStarter, "use-server-starter", "", false, "Use server_starter")
 	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show version")
 }
