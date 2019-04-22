@@ -80,7 +80,7 @@ var rootCmd = &cobra.Command{
 		// 1. SMTP
 		if listenSmtp {
 			l.Info("Starting SMTP server.")
-			if useServerStarter {
+			if useServerStarter || useDewy {
 				go smtp_server.RunWithServerStarter(ctx, l, listeners[0])
 			} else {
 				go smtp_server.Run(ctx, l, smtpPort)
