@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.3](https://github.com/k1LoW/anyslk/compare/v0.0.2...v0.0.3) (2019-04-22)
+
+* Fix useDewy condition [#3](https://github.com/k1LoW/anyslk/pull/3) ([k1LoW](https://github.com/k1LoW))
+
 ## [v0.0.2](https://github.com/k1LoW/anyslk/compare/v0.0.1...v0.0.2) (2019-04-22)
 
 * Add `use-dewy` option / Add archives that dewy friendly [#2](https://github.com/k1LoW/anyslk/pull/2) ([k1LoW](https://github.com/k1LoW))
