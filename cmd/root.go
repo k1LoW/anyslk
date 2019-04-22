@@ -42,6 +42,7 @@ var (
 	listenSmtp       bool
 	smtpPort         int
 	logDir           string
+	useDewy          bool
 	useServerStarter bool
 	showVersion      bool
 )
@@ -68,7 +69,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		var listeners []net.Listener
-		if useServerStarter {
+		if useServerStarter || useDewy {
 			listeners, err = listener.ListenAll()
 			if err != nil {
 				l.Fatal("error", zap.Error(err))
@@ -122,5 +123,6 @@ func init() {
 	rootCmd.Flags().IntVarP(&smtpPort, "smtp-port", "", 1025, "SMTP server port")
 	rootCmd.Flags().StringVarP(&logDir, "log-dir", "", ".", "Log directory")
 	rootCmd.Flags().BoolVarP(&useServerStarter, "use-server-starter", "", false, "Use server_starter")
+	rootCmd.Flags().BoolVarP(&useDewy, "use-dewy", "", false, "Use dewy")
 	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show version")
 }

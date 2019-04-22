@@ -14,11 +14,19 @@ builds:
     - amd64
   ldflags:
     - -s -w -X github.com/k1LoW/anyslk.version={{.Version}} -X github.com/k1LoW/anyslk.commit={{.FullCommit}} -X github.com/k1LoW/anyslk.date={{.Date}} -X github.com/k1LoW/anyslk/version.Version={{.Version}}
-archive:
-  name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-  format_overrides:
-    - goos: darwin
-      format: zip
+archives:
+  -
+    id: default
+    name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    format_overrides:
+      - goos: darwin
+        format: zip
+  -
+    id: dewy
+    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    format_overrides:
+      - goos: darwin
+        format: zip
 checksum:
   name_template: 'checksums.txt'
 snapshot:
