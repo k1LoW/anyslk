@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"net/mail"
+	"os"
 	"strings"
 	"time"
 
@@ -59,29 +61,70 @@ func (s *Session) Rcpt(to string) error {
 }
 
 func (s *Session) Data(r io.Reader) error {
-	if b, err := ioutil.ReadAll(r); err != nil {
+	m, err := mail.ReadMessage(r)
+	if err != nil {
 		return err
-	} else {
-		data := string(b)
-		slackChannel := makeSlackChannel(s.to)
-		payload := slack.Payload{
-			Channel:   slackChannel,
-			IconEmoji: ":slack:",
-			Username:  s.username,
-		}
-		attachment := slack.Attachment{
-			Title:     fmt.Sprintf(":email: Mail from %s", s.from),
-			Text:      data,
-			Fallback:  fmt.Sprintf("Mail from %s", s.from),
-			Timestamp: time.Now().Unix(),
-			Footer:    "anyslk",
-		}
-		payload.AddAttachment(&attachment)
-		slack.Client{
-			WebhookURL: s.webhookURL,
-		}.Post(&payload)
-		s.logger.Info("Mail -> slack message", zap.String("from", s.from), zap.String("to", s.to), zap.String("data", data))
 	}
+	header := m.Header
+	subject := header.Get("Subject")
+	from := header.Get("From")
+	to := header.Get("To")
+	date := header.Get("Date")
+	body, err := ioutil.ReadAll(m.Body)
+	if err != nil {
+		return err
+	}
+	if subject == "" {
+		subject = fmt.Sprintf("Mail from %s", s.from)
+	}
+	hostname, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+
+	slackChannel := makeSlackChannel(s.to)
+	payload := slack.Payload{
+		Channel:   slackChannel,
+		IconEmoji: ":slack:",
+		Username:  s.username,
+	}
+	attachment := slack.Attachment{
+		Title:     fmt.Sprintf(":email: %s", subject),
+		Fallback:  subject,
+		Timestamp: time.Now().Unix(),
+		Footer:    "anyslk",
+	}
+	attachment.AddField(&slack.Field{
+		Title: "From",
+		Value: from,
+		Short: true,
+	})
+	attachment.AddField(&slack.Field{
+		Title: "To",
+		Value: to,
+		Short: true,
+	})
+	attachment.AddField(&slack.Field{
+		Title: "Date",
+		Value: date,
+		Short: true,
+	})
+	attachment.AddField(&slack.Field{
+		Title: "Hostname",
+		Value: hostname,
+		Short: true,
+	})
+	attachment.AddField(&slack.Field{
+		Title: "Body",
+		Value: string(body),
+		Short: false,
+	})
+
+	payload.AddAttachment(&attachment)
+	slack.Client{
+		WebhookURL: s.webhookURL,
+	}.Post(&payload)
+	s.logger.Info("Mail -> slack message", zap.String("from", s.from), zap.String("to", s.to), zap.Any("header", m.Header), zap.String("body", string(body)))
 	return nil
 }
 
