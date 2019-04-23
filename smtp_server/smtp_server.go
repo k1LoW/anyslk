@@ -92,7 +92,7 @@ func (s *Session) Data(r io.Reader) error {
 		Title:     fmt.Sprintf(":email: %s", subject),
 		Fallback:  subject,
 		Timestamp: time.Now().Unix(),
-		Footer:    "anyslk",
+		Footer:    fmt.Sprintf("anyslk on %s", hostname),
 	}
 	attachment.AddField(&slack.Field{
 		Title: "From",
@@ -107,11 +107,6 @@ func (s *Session) Data(r io.Reader) error {
 	attachment.AddField(&slack.Field{
 		Title: "Date",
 		Value: date,
-		Short: true,
-	})
-	attachment.AddField(&slack.Field{
-		Title: "Hostname",
-		Value: hostname,
 		Short: true,
 	})
 	attachment.AddField(&slack.Field{
