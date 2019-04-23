@@ -4,7 +4,7 @@
 
 ## Support protocol
 
-### SMTP
+### :email: SMTP
 
 Mail -> Slack message
 
@@ -21,3 +21,7 @@ Convert `RCPT TO` address to Slack channel name
 random@example.com -> Post message to #random channel
 ^^^^^^                                 ^^^^^^
 ```
+
+### :earth_asia: HTTP
+
+:construction:
