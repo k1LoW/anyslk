@@ -71,6 +71,7 @@ func (s *Session) Data(r io.Reader) error {
 	to := header.Get("To")
 	date := header.Get("Date")
 	body, err := ioutil.ReadAll(m.Body)
+	color := "#6CBAD8"
 	if err != nil {
 		return err
 	}
@@ -92,6 +93,7 @@ func (s *Session) Data(r io.Reader) error {
 		Title:     fmt.Sprintf(":email: %s", subject),
 		Fallback:  subject,
 		Timestamp: time.Now().Unix(),
+		Color:     color,
 		Footer:    fmt.Sprintf("anyslk on %s", hostname),
 	}
 	attachment.AddField(&slack.Field{
