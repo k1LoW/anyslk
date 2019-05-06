@@ -12,23 +12,22 @@ import (
 	"time"
 
 	"github.com/emersion/go-smtp"
-	"github.com/k1LoW/anyslk/util"
 	slack "github.com/monochromegane/slack-incoming-webhooks"
 	"go.uber.org/zap"
 )
 
 // The Backend implements SMTP server methods.
 type Backend struct {
-	webhookURL string
-	logger     *zap.Logger
+	WebhookURL string
+	Logger     *zap.Logger
 }
 
 // Login handles a login command with username and password.
 func (be *Backend) Login(state *smtp.ConnectionState, username, password string) (smtp.Session, error) {
 	return &Session{
 		username:   username,
-		webhookURL: be.webhookURL,
-		logger:     be.logger,
+		webhookURL: be.WebhookURL,
+		logger:     be.Logger,
 	}, nil
 }
 
@@ -36,8 +35,8 @@ func (be *Backend) Login(state *smtp.ConnectionState, username, password string)
 func (be *Backend) AnonymousLogin(state *smtp.ConnectionState) (smtp.Session, error) {
 	return &Session{
 		username:   "anyslk",
-		webhookURL: be.webhookURL,
-		logger:     be.logger,
+		webhookURL: be.WebhookURL,
+		logger:     be.Logger,
 	}, nil
 }
 
@@ -138,15 +137,7 @@ func makeSlackChannel(to string) string {
 }
 
 // Run ...
-func Run(ctx context.Context, logger *zap.Logger, port int) error {
-	webhookURL, err := util.GetEnvSlackIncommingWebhook()
-	if err != nil {
-		return err
-	}
-	be := &Backend{
-		webhookURL: webhookURL,
-		logger:     logger,
-	}
+func Run(ctx context.Context, be *Backend, port int) error {
 	s := smtp.NewServer(be)
 	defer s.Close()
 	s.Addr = fmt.Sprintf("localhost:%d", port)
@@ -157,11 +148,11 @@ func Run(ctx context.Context, logger *zap.Logger, port int) error {
 	s.MaxRecipients = 50
 	s.AllowInsecureAuth = true
 
-	logger.Info(fmt.Sprintf("Start listening %s", s.Addr))
+	be.Logger.Info(fmt.Sprintf("Start listening %s", s.Addr))
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
-			logger.Fatal("error", zap.Error(err))
+			be.Logger.Fatal("error", zap.Error(err))
 		}
 	}()
 
@@ -173,15 +164,7 @@ func Run(ctx context.Context, logger *zap.Logger, port int) error {
 }
 
 // RunWithServerStarter ...
-func RunWithServerStarter(ctx context.Context, logger *zap.Logger, l net.Listener) error {
-	webhookURL, err := util.GetEnvSlackIncommingWebhook()
-	if err != nil {
-		return err
-	}
-	be := &Backend{
-		webhookURL: webhookURL,
-		logger:     logger,
-	}
+func RunWithServerStarter(ctx context.Context, be *Backend, l net.Listener) error {
 	s := smtp.NewServer(be)
 	defer s.Close()
 	s.Addr = l.Addr().String()
@@ -192,11 +175,11 @@ func RunWithServerStarter(ctx context.Context, logger *zap.Logger, l net.Listene
 	s.MaxRecipients = 50
 	s.AllowInsecureAuth = true
 
-	logger.Info(fmt.Sprintf("Start listening %s", s.Addr))
+	be.Logger.Info(fmt.Sprintf("Start listening %s", s.Addr))
 
 	go func() {
 		if err := s.Serve(l); err != nil {
-			logger.Fatal("error", zap.Error(err))
+			be.Logger.Fatal("error", zap.Error(err))
 		}
 	}()
 

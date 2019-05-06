@@ -80,10 +80,19 @@ var rootCmd = &cobra.Command{
 		// 1. SMTP
 		if listenSmtp {
 			l.Info("Starting SMTP server.")
+			webhookURL, err := util.GetEnvSlackIncommingWebhook()
+			if err != nil {
+				l.Fatal("error", zap.Error(err))
+				os.Exit(1)
+			}
+			be := &smtp_server.Backend{
+				WebhookURL: webhookURL,
+				Logger:     l,
+			}
 			if useServerStarter || useDewy {
-				go smtp_server.RunWithServerStarter(ctx, l, listeners[0])
+				go smtp_server.RunWithServerStarter(ctx, be, listeners[0])
 			} else {
-				go smtp_server.Run(ctx, l, smtpPort)
+				go smtp_server.Run(ctx, be, smtpPort)
 			}
 		}
 
