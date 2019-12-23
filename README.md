@@ -9,7 +9,7 @@
 Mail -> Slack message
 
 ``` console
-$ export SLACK_INCOMMING_WEBHOOK=https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXxxxXXXXXX
+$ export SLACK_INCOMMING_WEBHOOK_URL=https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXxxxXXXXXX
 $ anyslk --listen-smtp --smtp-port=1025
 ```
 
