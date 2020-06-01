@@ -49,7 +49,7 @@ type Session struct {
 	to         string
 }
 
-func (s *Session) Mail(from string) error {
+func (s *Session) Mail(from string, opts smtp.MailOptions) error {
 	s.from = from
 	return nil
 }
